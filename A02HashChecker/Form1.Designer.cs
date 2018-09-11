@@ -1,6 +1,6 @@
 ﻿namespace A02HashChecker
 {
-    partial class Form1
+    partial class HashCheckerForm
     {
         /// <summary>
         /// Required designer variable.
@@ -37,7 +37,6 @@
             this.md5Tb = new System.Windows.Forms.TextBox();
             this.statusLbl = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
-            this.cancelBtn = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // label1
@@ -118,23 +117,11 @@
             this.label4.TabIndex = 8;
             this.label4.Text = "Status:";
             // 
-            // cancelBtn
-            // 
-            this.cancelBtn.Location = new System.Drawing.Point(125, 12);
-            this.cancelBtn.Name = "cancelBtn";
-            this.cancelBtn.Size = new System.Drawing.Size(75, 23);
-            this.cancelBtn.TabIndex = 9;
-            this.cancelBtn.Text = "Cancel";
-            this.cancelBtn.UseVisualStyleBackColor = true;
-            this.cancelBtn.Visible = false;
-            this.cancelBtn.Click += new System.EventHandler(this.CancelBtn_Click);
-            // 
-            // Form1
+            // HashCheckerForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(547, 150);
-            this.Controls.Add(this.cancelBtn);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.statusLbl);
             this.Controls.Add(this.md5Tb);
@@ -145,7 +132,7 @@
             this.Controls.Add(this.sha1Lbl);
             this.Controls.Add(this.label1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
-            this.Name = "Form1";
+            this.Name = "HashCheckerForm";
             this.Text = "Hash Checker";
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -163,7 +150,6 @@
         private System.Windows.Forms.TextBox md5Tb;
         private System.Windows.Forms.Label statusLbl;
         private System.Windows.Forms.Label label4;
-        private System.Windows.Forms.Button cancelBtn;
     }
 }
 
