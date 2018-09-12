@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "A01HashDirectories", "A01Ha
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "A02HashChecker", "A02HashChecker\A02HashChecker.csproj", "{3E19B384-DC90-4EB5-967D-27DA2B103924}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "A03FileEncrypter", "A03FileEncrypter\A03FileEncrypter.csproj", "{F8C3EA00-8ECE-4E8E-B5E4-9E0DA51DC106}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{3E19B384-DC90-4EB5-967D-27DA2B103924}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3E19B384-DC90-4EB5-967D-27DA2B103924}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3E19B384-DC90-4EB5-967D-27DA2B103924}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F8C3EA00-8ECE-4E8E-B5E4-9E0DA51DC106}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F8C3EA00-8ECE-4E8E-B5E4-9E0DA51DC106}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F8C3EA00-8ECE-4E8E-B5E4-9E0DA51DC106}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F8C3EA00-8ECE-4E8E-B5E4-9E0DA51DC106}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
