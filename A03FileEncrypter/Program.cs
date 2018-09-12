@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Security;
 using System.Security.Cryptography;
 using System.Text;
@@ -12,44 +13,63 @@ namespace A03FileEncrypter
 {
     class Program
     {
-        private const string encryptedFileExt = ".enc";
-
         static void Main(string[] args)
         {
-            string fileName = File.Exists(args[1]) ? args[1] : "";
-            if (string.IsNullOrWhiteSpace(args[1]))
+            string fileName = args[1];
+            if (string.IsNullOrWhiteSpace(fileName))
             {
                 throw new ArgumentNullException("file name");
             }
-            else if (File.Exists(args[1]) == false)
+            else if (File.Exists(fileName) == false)
             {
                 throw new FileNotFoundException(fileName);
             }
 
-            //Watch out for "–" does not equal "-"!
-            switch (args[0])
+            //Watch out for "–" does not equal "-" !!!
+            string operation = args[0];
+            if (operation == "–e")
             {
-                case "–encrypt":
-                    Encrypt(fileName);
-                    break;
-                case "–decrypt":
-                    Decrypt(fileName);
-                    break;
-                default:
-                    Console.WriteLine("Invalid Command " + args[0].Substring(1, args[0].Length - 1));
-                    break;
+                Console.WriteLine($"Encrypt file \"{fileName}\"");
+                Transform(CryptoOperationsEnum.Encrypt, fileName);
+            }
+            else if (operation == "–d")
+            {
+                Console.WriteLine($"Decrypt file \"{fileName}\"");
+                Transform(CryptoOperationsEnum.Decrypt, fileName);
+            }
+            else
+            {
+                throw new ArgumentNullException("No Crypto transform operation passed");
             }
         }
 
-        private static void Encrypt(string origFileName)
+        private static void Transform(CryptoOperationsEnum operation, string fileName)
         {
-            Console.WriteLine("Encrypt file " + origFileName);
+            byte[] transformedFile = CrytoTransform(fileName, operation);
 
-            byte[] key = GetCredencialBytes("Key");
-            byte[] iv = GetCredencialBytes("IV");
+            string newFileName = "";
+            if (operation == CryptoOperationsEnum.Decrypt)
+            {
+                newFileName = Path.Combine(
+                    Path.GetDirectoryName(fileName),
+                    Path.GetFileNameWithoutExtension(fileName));
+                newFileName = GetNextFileName(newFileName);
+            }
+            else if (operation == CryptoOperationsEnum.Encrypt)
+            {
+                newFileName = fileName + ".enc";
+            }
 
-            byte[] orignalFile = File.ReadAllBytes(origFileName);
-            byte[] encryptedFile;
+            File.WriteAllBytes(newFileName, transformedFile);
+        }
+
+        private static byte[] CrytoTransform(string fileName, CryptoOperationsEnum operation)
+        {
+            byte[] key = GetCredencial("Key");
+            byte[] iv = GetCredencial("IV");
+
+            byte[] orignalFile = File.ReadAllBytes(fileName);
+            byte[] processedFile;
 
             using (MemoryStream memoryStream = new MemoryStream())
             {
@@ -57,66 +77,104 @@ namespace A03FileEncrypter
                 {
                     aes.IV = iv;
                     aes.Key = key;
-                    using (CryptoStream cryptoStream = new CryptoStream(memoryStream, aes.CreateEncryptor(), CryptoStreamMode.Write))
+
+                    ICryptoTransform cryptoTransform;
+                    switch (operation)
+                    {
+                        case CryptoOperationsEnum.Encrypt:
+                            cryptoTransform = aes.CreateEncryptor();
+                            break;
+                        case CryptoOperationsEnum.Decrypt:
+                            cryptoTransform = aes.CreateDecryptor();
+                            break;
+                        default:
+                            throw new Exception();
+                    }
+
+                    using (CryptoStream cryptoStream = new CryptoStream(memoryStream, cryptoTransform, CryptoStreamMode.Write))
                     {
                         cryptoStream.Write(orignalFile, 0, orignalFile.Length);
                     }
-                    encryptedFile = memoryStream.ToArray();
+                    processedFile = memoryStream.ToArray();
                 }
             }
-            
-            origFileName = getNextFileName(origFileName + encryptedFileExt);
-            File.WriteAllBytes(origFileName + encryptedFileExt, encryptedFile);
+
+            return processedFile;
         }
 
-        private static void Decrypt(string encryptedfileName)
+        private static byte[] GetCredencial(string type)
         {
-            Console.WriteLine("Decrypt file " + encryptedfileName);
-
-            byte[] key = GetCredencialBytes("Key");
-            byte[] iv = GetCredencialBytes("IV");
-
-            byte[] encryptedFile = File.ReadAllBytes(encryptedfileName);
-            byte[] orignalFile;
-
-            using (MemoryStream memoryStream = new MemoryStream())
-            {
-                using (AesManaged aes = new AesManaged())
-                {
-                    aes.Key = key;
-                    aes.IV = iv;
-
-                    using (CryptoStream cryptoStream = new CryptoStream(memoryStream, aes.CreateDecryptor(), CryptoStreamMode.Write))
-                    {
-                        cryptoStream.Write(encryptedFile, 0, encryptedFile.Length);
-                    }
-                    orignalFile = memoryStream.ToArray();
-                }
-            }
-            string origFileName = Path.Combine(
-                Path.GetDirectoryName(encryptedfileName), 
-                Path.GetFileNameWithoutExtension(encryptedfileName));
-            origFileName = getNextFileName(origFileName);
-            File.WriteAllBytes(origFileName, orignalFile);
-        }
-
-        private static byte[] GetCredencialBytes(string credencial)
-        {
-            string input;
+            SecureString credencial;
             do
             {
-                Console.Write(credencial + ": ");
-                input = Console.ReadLine();
-                input = (input?.Length > 0) ? input : "";
-            } while (input == "");
+                Console.Write(type + ": ");
+                credencial = GetSecureInput();
+                Console.WriteLine();
+            } while (credencial.Length == 0);
 
             byte[] salt = Encoding.UTF8.GetBytes("randomSalt");
-            var generator = new Rfc2898DeriveBytes(input, salt, 10000);
-
+            var generator = new Rfc2898DeriveBytes(ConvertToUnsecureString(credencial), salt, 10000);
             return generator.GetBytes(16);
         }
 
-        private static string getNextFileName(string fileName)
+        private static SecureString GetSecureInput()
+        {
+            SecureString input = new SecureString();
+
+            // Erstes Zeichen einlesen
+            ConsoleKeyInfo nextKey = Console.ReadKey(true);
+
+            while (nextKey.Key != ConsoleKey.Enter)
+            {
+                // Backspace gedrückt?
+                if (nextKey.Key == ConsoleKey.Backspace)
+                {
+                    if (input.Length > 0)
+                    {
+                        // Letztes Zeichen entfernen
+                        input.RemoveAt(input.Length - 1);
+
+                        // Letzten * entfernen
+                        Console.Write(nextKey.KeyChar);
+                        Console.Write(" ");
+                        Console.Write(nextKey.KeyChar);
+                    }
+                }
+                else
+                {
+                    // Zeichen an den SecureString anhängen
+                    input.AppendChar(nextKey.KeyChar);
+                    Console.Write("*");
+                }
+
+                nextKey = Console.ReadKey(true);
+            }
+            input.MakeReadOnly();
+            return input;
+        }
+
+        private static string ConvertToUnsecureString(SecureString secureString)
+        {
+            // Speicherbereich für den Klartext
+            IntPtr unmanagedString = IntPtr.Zero;
+            string unsecureString;
+            try
+            {
+                // Sicheren String in Klartext kopieren
+                unmanagedString = Marshal.SecureStringToGlobalAllocUnicode(secureString);
+
+                // Klartext in String umwandeln
+                unsecureString = Marshal.PtrToStringUni(unmanagedString);
+            }
+            finally
+            {
+                // Klartext wieder aus dem Arbeitsspeicher löschen
+                Marshal.ZeroFreeGlobalAllocUnicode(unmanagedString);
+            }
+            return unsecureString;
+        }
+
+        private static string GetNextFileName(string fileName)
         {
             string extension = Path.GetExtension(fileName);
 
@@ -131,5 +189,10 @@ namespace A03FileEncrypter
 
             return fileName;
         }
+    }
+
+    enum CryptoOperationsEnum
+    {
+        Encrypt, Decrypt
     }
 }
