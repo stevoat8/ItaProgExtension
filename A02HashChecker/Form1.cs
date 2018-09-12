@@ -12,7 +12,6 @@ namespace A02HashChecker
 {
     public partial class HashCheckerForm : Form
     {
-        private readonly CancellationTokenSource tokenSource = new CancellationTokenSource();
 
         public HashCheckerForm()
         {
@@ -21,54 +20,104 @@ namespace A02HashChecker
 
         private void OpenFileBtn_Click(object sender, EventArgs e)
         {
-            StartHashing();
+            OpenFileDialog dialog = new OpenFileDialog();
+            if (dialog.ShowDialog() == DialogResult.OK)
+            {
+                filePathTb.Text = dialog.FileName;
+            }
+        }
+
+        private void CheckHashBtn_Click(object sender, EventArgs e)
+        {
+            StartCheckingHash();
+        }
+
+        private void StartCheckingHash()
+        {
+            statusTb.Text = "";
+
+            string filePath = filePathTb.Text;
+            if (File.Exists(filePath) == false)
+            {
+                statusTb.Text = "Error: Filename does not exist";
+                return;
+            }
+
+            string hashInput = hashTb.Text;
+            if (string.IsNullOrWhiteSpace(hashInput))
+            {
+                statusTb.Text = "Error: No Hash value";
+                return;
+            }
+
+            statusTb.Text = "Hashing...";
+            LockUi();
+            StartHashing(filePath, hashInput);
+        }
+
+        private void LockUi()
+        {
+            filePathTb.Enabled = false;
+            hashTb.Enabled = false;
+            openFileBtn.Enabled = false;
+            checkHashBtn.Enabled = false;
+
+            cancelBtn.Enabled = true;
+            cancelBtn.Visible = true;
+            progressBar.Visible = true;
+            Cursor = Cursors.WaitCursor;
+        }
+
+        private void UnlockUi()
+        {
+            filePathTb.Enabled = true;
+            hashTb.Enabled = true;
+            openFileBtn.Enabled = true;
+            checkHashBtn.Enabled = true;
+
+            cancelBtn.Enabled = false;
+            cancelBtn.Visible = false;
+            progressBar.Visible = false;
+            Cursor = Cursors.Default;
         }
 
         /// <summary>
         /// Starts a new hashing process.
         /// </summary>
-        private async void StartHashing()
+        private async void StartHashing(string filePath, string hashInput)
         {
-            ResetUi();
-            ConcurrentDictionary<string, string> hashValues = new ConcurrentDictionary<string, string>();
-
-            OpenFileDialog dialog = new OpenFileDialog();
-            if (dialog.ShowDialog() == DialogResult.OK)
+            try
             {
-                try
-                {
-                    openFileBtn.Enabled = false;
-                    Cursor = Cursors.WaitCursor;
+                CancellationTokenSource tokenSource = new CancellationTokenSource();
+                CancellationToken token = tokenSource.Token;
 
-                    statusLbl.Text = "Hashing...";
-                    filePathTb.Text = dialog.FileName;
+                Stopwatch watch = new Stopwatch();
+                watch.Start();
+                string generatedHash = await GetHash(filePath, token);
+                watch.Stop();
 
-                    CancellationToken token = tokenSource.Token;
+                string elapsedTime = string.Format("Time elapsed: {0:D2}:{1:D2}:{2:D3}",
+                    watch.Elapsed.Minutes,
+                    watch.Elapsed.Seconds,
+                    watch.Elapsed.Milliseconds);
 
-                    Stopwatch watch = new Stopwatch();
-                    watch.Start();
-                    Task t1 = Task.Run(() => hashValues.TryAdd("sha1", GetHash(dialog.FileName, SHA1.Create(), token)));
-                    Task t2 = Task.Run(() => hashValues.TryAdd("md5", GetHash(dialog.FileName, MD5.Create(), token)));
-                    await Task.WhenAll(t1, t2);
-                    watch.Stop();
+                string result = hashInput.Equals(generatedHash, StringComparison.OrdinalIgnoreCase)
+                    ? "Hash is correct!"
+                    : "Hash is not correct!" + Environment.NewLine + "Hash was " + generatedHash;
 
-                    hashValues.TryGetValue("sha1", out string sha1Hash);
-                    sha1Tb.Text = sha1Hash;
-
-                    hashValues.TryGetValue("md5", out string md5Hash);
-                    md5Tb.Text = md5Hash;
-
-                    string elapsedTime = String.Format("{0:D2}:{1:D2}:{2:D3}", watch.Elapsed.Minutes, watch.Elapsed.Seconds, watch.Elapsed.Milliseconds);
-                    statusLbl.Text = "Hashing Complete (" + elapsedTime + ")";
-
-                    Cursor = Cursors.Default;
-                    openFileBtn.Enabled = true;
-                }
-                catch (Exception ex)
-                {
-                    ResetUi();
-                    statusLbl.Text = "Error: " + ex;
-                }
+                statusTb.Text = result + Environment.NewLine + elapsedTime;
+            }
+            catch (OperationCanceledException)
+            {
+                statusTb.Text = "Canceled by user";
+            }
+            catch (Exception ex)
+            {
+                statusTb.Text = "Error: " + ex;
+            }
+            finally
+            {
+                UnlockUi();
             }
         }
 
@@ -77,12 +126,17 @@ namespace A02HashChecker
         /// </summary>
         /// <param name="hash"></param>
         /// <returns></returns>
-        private static string GetHash(string fileName, HashAlgorithm algo, CancellationToken token)
+        private static async Task<string> GetHash(string fileName, CancellationToken token)
         {
-            byte[] hash;
+            HashAlgorithm algo = SHA1.Create();
+            byte[] hash = new byte[0];
             using (FileStream fs = File.OpenRead(fileName))
             {
-                hash = algo.ComputeHash(fs);
+                //TODO: hier eigene computeHash Methode einfügen, die parallel läuft, 
+                //durch das Token abbrechbar ist und den Progressbalken erweitert.
+                await Task.Run(() =>
+                    hash = algo.ComputeHash(fs)
+                );
             }
             StringBuilder builder = new StringBuilder();
             foreach (byte byteVal in hash)
@@ -92,29 +146,5 @@ namespace A02HashChecker
             return builder.ToString();
         }
 
-        /// <summary>
-        /// Applies the given hash algorithm on the given file an returns the computed hash value.
-        /// </summary>
-        private static byte[] GetHashValue(string fileName, HashAlgorithm algo)
-        {
-            byte[] hash;
-            using (FileStream fs = File.OpenRead(fileName))
-            {
-                hash = algo.ComputeHash(fs);
-            }
-            return hash;
-        }
-
-        /// <summary>
-        /// Resets the UI.
-        /// </summary>
-        private void ResetUi()
-        {
-            statusLbl.Text = "";
-            filePathTb.Text = "";
-            sha1Tb.Text = "";
-            md5Tb.Text = "";
-            Cursor = Cursors.Default;
-        }
     }
 }

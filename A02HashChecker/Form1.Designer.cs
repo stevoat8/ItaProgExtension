@@ -28,47 +28,39 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.label1 = new System.Windows.Forms.Label();
-            this.sha1Lbl = new System.Windows.Forms.Label();
-            this.md5Lbl = new System.Windows.Forms.Label();
+            this.filePathLbl = new System.Windows.Forms.Label();
+            this.hashLbl = new System.Windows.Forms.Label();
             this.openFileBtn = new System.Windows.Forms.Button();
             this.filePathTb = new System.Windows.Forms.TextBox();
-            this.sha1Tb = new System.Windows.Forms.TextBox();
-            this.md5Tb = new System.Windows.Forms.TextBox();
-            this.statusLbl = new System.Windows.Forms.Label();
-            this.label4 = new System.Windows.Forms.Label();
+            this.hashTb = new System.Windows.Forms.TextBox();
+            this.checkHashBtn = new System.Windows.Forms.Button();
+            this.progressBar = new System.Windows.Forms.ProgressBar();
+            this.cancelBtn = new System.Windows.Forms.Button();
+            this.statusTb = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
             // 
-            // label1
+            // filePathLbl
             // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(20, 47);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(32, 13);
-            this.label1.TabIndex = 0;
-            this.label1.Text = "Pfad:";
+            this.filePathLbl.AutoSize = true;
+            this.filePathLbl.Location = new System.Drawing.Point(9, 9);
+            this.filePathLbl.Name = "filePathLbl";
+            this.filePathLbl.Size = new System.Drawing.Size(32, 13);
+            this.filePathLbl.TabIndex = 0;
+            this.filePathLbl.Text = "Pfad:";
             // 
-            // sha1Lbl
+            // hashLbl
             // 
-            this.sha1Lbl.AutoSize = true;
-            this.sha1Lbl.Location = new System.Drawing.Point(20, 101);
-            this.sha1Lbl.Name = "sha1Lbl";
-            this.sha1Lbl.Size = new System.Drawing.Size(38, 13);
-            this.sha1Lbl.TabIndex = 1;
-            this.sha1Lbl.Text = "SHA1:";
-            // 
-            // md5Lbl
-            // 
-            this.md5Lbl.AutoSize = true;
-            this.md5Lbl.Location = new System.Drawing.Point(20, 74);
-            this.md5Lbl.Name = "md5Lbl";
-            this.md5Lbl.Size = new System.Drawing.Size(33, 13);
-            this.md5Lbl.TabIndex = 2;
-            this.md5Lbl.Text = "MD5:";
+            this.hashLbl.AutoSize = true;
+            this.hashLbl.Location = new System.Drawing.Point(9, 35);
+            this.hashLbl.Name = "hashLbl";
+            this.hashLbl.Size = new System.Drawing.Size(35, 13);
+            this.hashLbl.TabIndex = 2;
+            this.hashLbl.Text = "Hash:";
             // 
             // openFileBtn
             // 
-            this.openFileBtn.Location = new System.Drawing.Point(20, 12);
+            this.openFileBtn.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.openFileBtn.Location = new System.Drawing.Point(434, 4);
             this.openFileBtn.Name = "openFileBtn";
             this.openFileBtn.Size = new System.Drawing.Size(98, 23);
             this.openFileBtn.TabIndex = 3;
@@ -78,60 +70,85 @@
             // 
             // filePathTb
             // 
-            this.filePathTb.Location = new System.Drawing.Point(64, 44);
+            this.filePathTb.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.filePathTb.Location = new System.Drawing.Point(50, 6);
             this.filePathTb.Name = "filePathTb";
-            this.filePathTb.ReadOnly = true;
-            this.filePathTb.Size = new System.Drawing.Size(471, 20);
+            this.filePathTb.Size = new System.Drawing.Size(378, 20);
             this.filePathTb.TabIndex = 4;
+            this.filePathTb.Text = "\\\\srv-dc\\Software\\Visual Studio 2013 Ultimate + TFS\\vs2013.5_ult_deu.iso";
             // 
-            // sha1Tb
+            // hashTb
             // 
-            this.sha1Tb.Location = new System.Drawing.Point(64, 98);
-            this.sha1Tb.Name = "sha1Tb";
-            this.sha1Tb.ReadOnly = true;
-            this.sha1Tb.Size = new System.Drawing.Size(471, 20);
-            this.sha1Tb.TabIndex = 5;
+            this.hashTb.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.hashTb.Location = new System.Drawing.Point(50, 32);
+            this.hashTb.Name = "hashTb";
+            this.hashTb.Size = new System.Drawing.Size(378, 20);
+            this.hashTb.TabIndex = 6;
+            this.hashTb.Text = "198c8ca5e80cc5f1ef579a6b2b6d5d2a55dc099b";
             // 
-            // md5Tb
+            // checkHashBtn
             // 
-            this.md5Tb.Location = new System.Drawing.Point(64, 71);
-            this.md5Tb.Name = "md5Tb";
-            this.md5Tb.ReadOnly = true;
-            this.md5Tb.Size = new System.Drawing.Size(471, 20);
-            this.md5Tb.TabIndex = 6;
+            this.checkHashBtn.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.checkHashBtn.Location = new System.Drawing.Point(434, 30);
+            this.checkHashBtn.Name = "checkHashBtn";
+            this.checkHashBtn.Size = new System.Drawing.Size(98, 23);
+            this.checkHashBtn.TabIndex = 7;
+            this.checkHashBtn.Text = "Check Hash";
+            this.checkHashBtn.UseVisualStyleBackColor = true;
+            this.checkHashBtn.Click += new System.EventHandler(this.CheckHashBtn_Click);
             // 
-            // statusLbl
+            // progressBar
             // 
-            this.statusLbl.AutoSize = true;
-            this.statusLbl.Location = new System.Drawing.Point(64, 125);
-            this.statusLbl.Name = "statusLbl";
-            this.statusLbl.Size = new System.Drawing.Size(0, 13);
-            this.statusLbl.TabIndex = 7;
+            this.progressBar.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.progressBar.Location = new System.Drawing.Point(50, 129);
+            this.progressBar.Name = "progressBar";
+            this.progressBar.Size = new System.Drawing.Size(378, 23);
+            this.progressBar.TabIndex = 8;
+            this.progressBar.Visible = false;
             // 
-            // label4
+            // cancelBtn
             // 
-            this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(20, 125);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(40, 13);
-            this.label4.TabIndex = 8;
-            this.label4.Text = "Status:";
+            this.cancelBtn.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.cancelBtn.Enabled = false;
+            this.cancelBtn.Location = new System.Drawing.Point(434, 129);
+            this.cancelBtn.Name = "cancelBtn";
+            this.cancelBtn.Size = new System.Drawing.Size(98, 23);
+            this.cancelBtn.TabIndex = 9;
+            this.cancelBtn.Text = "Cancel";
+            this.cancelBtn.UseVisualStyleBackColor = true;
+            this.cancelBtn.Visible = false;
+            // 
+            // statusTb
+            // 
+            this.statusTb.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.statusTb.Location = new System.Drawing.Point(50, 58);
+            this.statusTb.Multiline = true;
+            this.statusTb.Name = "statusTb";
+            this.statusTb.ReadOnly = true;
+            this.statusTb.Size = new System.Drawing.Size(378, 63);
+            this.statusTb.TabIndex = 11;
             // 
             // HashCheckerForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(547, 150);
-            this.Controls.Add(this.label4);
-            this.Controls.Add(this.statusLbl);
-            this.Controls.Add(this.md5Tb);
-            this.Controls.Add(this.sha1Tb);
-            this.Controls.Add(this.filePathTb);
+            this.ClientSize = new System.Drawing.Size(544, 164);
+            this.Controls.Add(this.statusTb);
+            this.Controls.Add(this.cancelBtn);
+            this.Controls.Add(this.progressBar);
+            this.Controls.Add(this.checkHashBtn);
             this.Controls.Add(this.openFileBtn);
-            this.Controls.Add(this.md5Lbl);
-            this.Controls.Add(this.sha1Lbl);
-            this.Controls.Add(this.label1);
+            this.Controls.Add(this.hashTb);
+            this.Controls.Add(this.filePathLbl);
+            this.Controls.Add(this.hashLbl);
+            this.Controls.Add(this.filePathTb);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
+            this.MinimumSize = new System.Drawing.Size(400, 160);
             this.Name = "HashCheckerForm";
             this.Text = "Hash Checker";
             this.ResumeLayout(false);
@@ -141,15 +158,15 @@
 
         #endregion
 
-        private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.Label sha1Lbl;
-        private System.Windows.Forms.Label md5Lbl;
+        private System.Windows.Forms.Label filePathLbl;
+        private System.Windows.Forms.Label hashLbl;
         private System.Windows.Forms.Button openFileBtn;
         private System.Windows.Forms.TextBox filePathTb;
-        private System.Windows.Forms.TextBox sha1Tb;
-        private System.Windows.Forms.TextBox md5Tb;
-        private System.Windows.Forms.Label statusLbl;
-        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.TextBox hashTb;
+        private System.Windows.Forms.Button checkHashBtn;
+        private System.Windows.Forms.ProgressBar progressBar;
+        private System.Windows.Forms.Button cancelBtn;
+        private System.Windows.Forms.TextBox statusTb;
     }
 }
 
