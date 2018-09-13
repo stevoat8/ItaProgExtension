@@ -13,9 +13,14 @@ namespace A03FileEncrypter
 {
     class Program
     {
+        //Input e.g.: –e –a aes –f C:\Users\user\Desktop\aFile.txt 
         static void Main(string[] args)
         {
-            string fileName = args[1];
+            string operationInput = args[0];
+            string algorithmInput = args[2];
+            string fileName = args[4];
+
+
             if (string.IsNullOrWhiteSpace(fileName))
             {
                 throw new ArgumentNullException("file name");
@@ -25,37 +30,77 @@ namespace A03FileEncrypter
                 throw new FileNotFoundException(fileName);
             }
 
-            //Watch out for "–" does not equal "-" !!!
-            string operation = args[0];
-            if (operation == "–e")
+            CryptoTransformOperationsEnum operation;
+            switch (operationInput) //Watch out for "–" does not equal "-" !!!
             {
-                Console.WriteLine($"Encrypt file \"{fileName}\"");
-                Transform(CryptoOperationsEnum.Encrypt, fileName);
+                case "–e":
+                    operation = CryptoTransformOperationsEnum.Encrypt;
+                    break;
+                case "–d":
+                    operation = CryptoTransformOperationsEnum.Decrypt;
+                    break;
+                default:
+                    throw new ArgumentNullException("The passed crypto transform operation is invalid");
             }
-            else if (operation == "–d")
+
+            SymetricAlgorithmsEnum algorithm;
+            switch (algorithmInput) //Watch out for "–" does not equal "-" !!!
             {
-                Console.WriteLine($"Decrypt file \"{fileName}\"");
-                Transform(CryptoOperationsEnum.Decrypt, fileName);
+                case "aes":
+                    algorithm = SymetricAlgorithmsEnum.AES;
+                    break;
+                case "des":
+                    algorithm = SymetricAlgorithmsEnum.DES;
+                    break;
+                case "rc2":
+                    algorithm = SymetricAlgorithmsEnum.RC2;
+                    break;
+                default:
+                    throw new ArgumentNullException("The passed algorithm is invalid");
             }
-            else
-            {
-                throw new ArgumentNullException("No Crypto transform operation passed");
-            }
+
+            string operationStr = Enum.GetName(operation.GetType(), operation);
+            string algorithmStr = Enum.GetName(algorithm.GetType(), algorithm);
+            Console.WriteLine($"\t{operationStr} file \"{fileName}\" with {algorithmStr} algorithm");
+            StartCryptoProcessing(fileName, operation, algorithm);
         }
 
-        private static void Transform(CryptoOperationsEnum operation, string fileName)
+        private static void StartCryptoProcessing(
+            string fileName, CryptoTransformOperationsEnum operation, SymetricAlgorithmsEnum algorithm)
         {
-            byte[] transformedFile = CrytoTransform(fileName, operation);
+
+            SymmetricAlgorithm algo;
+            switch (algorithm)
+            {
+                case SymetricAlgorithmsEnum.AES:
+                    algo = new AesManaged();
+                    break;
+                case SymetricAlgorithmsEnum.DES:
+                    algo = new DESCryptoServiceProvider();
+                    break;
+                case SymetricAlgorithmsEnum.RC2:
+                    algo = new RC2CryptoServiceProvider();
+                    break;
+                default:
+                    throw new Exception();
+            }
+
+            byte[] key = GetCredencial("Key", algo.BlockSize);
+            byte[] iv = GetCredencial("IV", algo.BlockSize);
+            algo.IV = iv;
+            algo.Key = key;
+
+            byte[] transformedFile = CryptoTransform(fileName, operation, algo);
 
             string newFileName = "";
-            if (operation == CryptoOperationsEnum.Decrypt)
+            if (operation == CryptoTransformOperationsEnum.Decrypt)
             {
                 newFileName = Path.Combine(
                     Path.GetDirectoryName(fileName),
                     Path.GetFileNameWithoutExtension(fileName));
                 newFileName = GetNextFileName(newFileName);
             }
-            else if (operation == CryptoOperationsEnum.Encrypt)
+            else if (operation == CryptoTransformOperationsEnum.Encrypt)
             {
                 newFileName = fileName + ".enc";
             }
@@ -63,58 +108,51 @@ namespace A03FileEncrypter
             File.WriteAllBytes(newFileName, transformedFile);
         }
 
-        private static byte[] CrytoTransform(string fileName, CryptoOperationsEnum operation)
+        private static byte[] CryptoTransform(
+            string fileName, CryptoTransformOperationsEnum operation, SymmetricAlgorithm algo)
         {
-            byte[] key = GetCredencial("Key");
-            byte[] iv = GetCredencial("IV");
-
             byte[] orignalFile = File.ReadAllBytes(fileName);
             byte[] processedFile;
 
-            using (MemoryStream memoryStream = new MemoryStream())
+            ICryptoTransform cryptoTransform;
+            switch (operation)
             {
-                using (AesManaged aes = new AesManaged())
-                {
-                    aes.IV = iv;
-                    aes.Key = key;
-
-                    ICryptoTransform cryptoTransform;
-                    switch (operation)
-                    {
-                        case CryptoOperationsEnum.Encrypt:
-                            cryptoTransform = aes.CreateEncryptor();
-                            break;
-                        case CryptoOperationsEnum.Decrypt:
-                            cryptoTransform = aes.CreateDecryptor();
-                            break;
-                        default:
-                            throw new Exception();
-                    }
-
-                    using (CryptoStream cryptoStream = new CryptoStream(memoryStream, cryptoTransform, CryptoStreamMode.Write))
-                    {
-                        cryptoStream.Write(orignalFile, 0, orignalFile.Length);
-                    }
-                    processedFile = memoryStream.ToArray();
-                }
+                case CryptoTransformOperationsEnum.Encrypt:
+                    cryptoTransform = algo.CreateEncryptor();
+                    break;
+                case CryptoTransformOperationsEnum.Decrypt:
+                    cryptoTransform = algo.CreateDecryptor();
+                    break;
+                default:
+                    throw new Exception();
             }
 
+            using (MemoryStream memoryStream = new MemoryStream()) //TODO: original file bytes als param??
+            {
+                using (CryptoStream cryptoStream = new CryptoStream(memoryStream, cryptoTransform, CryptoStreamMode.Write))
+                {
+                    cryptoStream.Write(orignalFile, 0, orignalFile.Length);
+                }
+                algo.Dispose();
+                processedFile = memoryStream.ToArray();
+            }
             return processedFile;
         }
 
-        private static byte[] GetCredencial(string type)
+        private static byte[] GetCredencial(string type, int blockSize)
         {
             SecureString credencial;
             do
             {
-                Console.Write(type + ": ");
+                Console.Write("\t" + type + ": ");
                 credencial = GetSecureInput();
                 Console.WriteLine();
             } while (credencial.Length == 0);
 
             byte[] salt = Encoding.UTF8.GetBytes("randomSalt");
             var generator = new Rfc2898DeriveBytes(ConvertToUnsecureString(credencial), salt, 10000);
-            return generator.GetBytes(16);
+
+            return generator.GetBytes(blockSize / 8);
         }
 
         private static SecureString GetSecureInput()
@@ -182,17 +220,22 @@ namespace A03FileEncrypter
             while (File.Exists(fileName))
             {
                 if (i == 0)
-                    fileName = fileName.Replace(extension, "(" + ++i + ")" + extension);
+                    fileName = fileName.Replace($"{extension}", $"({++i}){extension}");
                 else
-                    fileName = fileName.Replace("(" + i + ")" + extension, "(" + ++i + ")" + extension);
+                    fileName = fileName.Replace($"({i}){extension}", $"({++i}){extension}");
             }
 
             return fileName;
         }
     }
 
-    enum CryptoOperationsEnum
+    enum CryptoTransformOperationsEnum
     {
         Encrypt, Decrypt
+    }
+
+    enum SymetricAlgorithmsEnum
+    {
+        AES, DES, RC2
     }
 }
