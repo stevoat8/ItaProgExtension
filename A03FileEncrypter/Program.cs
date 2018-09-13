@@ -61,14 +61,14 @@ namespace A03FileEncrypter
 
             string operationStr = Enum.GetName(operation.GetType(), operation);
             string algorithmStr = Enum.GetName(algorithm.GetType(), algorithm);
-            Console.WriteLine($"\t{operationStr} file \"{fileName}\" with {algorithmStr} algorithm");
+            Console.WriteLine($"{algorithmStr}-{operationStr} file \"{fileName}\"");
+
             StartCryptoProcessing(fileName, operation, algorithm);
         }
 
         private static void StartCryptoProcessing(
             string fileName, CryptoTransformOperationsEnum operation, SymetricAlgorithmsEnum algorithm)
         {
-
             SymmetricAlgorithm algo;
             switch (algorithm)
             {
@@ -127,7 +127,7 @@ namespace A03FileEncrypter
                     throw new Exception();
             }
 
-            using (MemoryStream memoryStream = new MemoryStream()) //TODO: original file bytes als param??
+            using (MemoryStream memoryStream = new MemoryStream())
             {
                 using (CryptoStream cryptoStream = new CryptoStream(memoryStream, cryptoTransform, CryptoStreamMode.Write))
                 {
