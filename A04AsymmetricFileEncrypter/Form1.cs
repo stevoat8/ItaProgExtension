@@ -87,14 +87,15 @@ namespace A04AsymmetricFileEncrypter
         private void EncryptBtn_Click(object sender, EventArgs e)
         {
             //TODO: statt den Text aus der Textbox holen, lieber wieder die Datei auslesen
-            cipherTextTb.Text = RsaManager.Encrypt(plainTextTb.Text);
+            byte[] content = Encoding.UTF8.GetBytes(plainTextTb.Text);
+            cipherTextTb.Text = RsaManager.Encrypt(content);
         }
 
         private void DecryptBtn_Click(object sender, EventArgs e)
         {
             //TODO: statt den Text aus der Textbox holen, lieber wieder die Datei auslesen
-            plainTextTb.Text = RsaManager.Decrypt(cipherTextTb.Text);
-
+            byte[] content = Encoding.UTF8.GetBytes(plainTextTb.Text);
+            plainTextTb.Text = RsaManager.Decrypt(content);
         }
     }
 }
