@@ -77,6 +77,7 @@
             this.publicKeysCb.Size = new System.Drawing.Size(429, 21);
             this.publicKeysCb.TabIndex = 3;
             this.publicKeysCb.ValueMember = "PublicKeys";
+            this.publicKeysCb.SelectedValueChanged += new System.EventHandler(this.publicKeysCB_SelectedValueChanged);
             // 
             // rsaManagerBindingSource
             // 

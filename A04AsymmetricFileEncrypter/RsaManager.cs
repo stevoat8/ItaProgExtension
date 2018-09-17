@@ -75,16 +75,16 @@ namespace A04AsymmetricFileEncrypter
             File.WriteAllText(fileName, xml, Encoding.UTF8);
         }
 
-        internal string Encrypt(byte[] text)
+        internal byte[] Encrypt(byte[] text)
         {
             var rsa = GetRSACryptoProvider();
-            rsa.Encrypt(text, true);
-            throw new NotImplementedException();
+            return rsa.Encrypt(text, true);
         }
 
-        internal string Decrypt(byte[] text)
+        internal byte[] Decrypt(byte[] text)
         {
-            throw new NotImplementedException();
+            var rsa = GetRSACryptoProvider();
+            return rsa.Decrypt(text, true);
         }
     }
 }

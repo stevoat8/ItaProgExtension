@@ -13,9 +13,10 @@ namespace A04AsymmetricFileEncrypter
 {
     public partial class FileEncrypterForm : Form
     {
-        public RsaManager RsaManager { get; }
+        public string SelectedFile { get; private set; }
+        internal RsaManager RsaManager { get; }
 
-        public FileEncrypterForm(RsaManager rsaManager)
+        internal FileEncrypterForm(RsaManager rsaManager)
         {
             InitializeComponent();
             RsaManager = rsaManager;
@@ -64,13 +65,17 @@ namespace A04AsymmetricFileEncrypter
             }
         }
 
+        private void publicKeysCB_SelectedValueChanged(object sender, EventArgs e)
+        {
+            Reset();
+        }
+
         private void OpenPlainTextBtn_Click(object sender, EventArgs e)
         {
             OpenFileDialog dialog = new OpenFileDialog();
             if (dialog.ShowDialog() == DialogResult.OK)
             {
-                //TODO: filename zwischenspeichern! dann kann man das weiter exportieren
-                plainTextTb.Text = File.ReadAllText(dialog.FileName);
+                ShowText(dialog.FileName, plainTextTb);
             }
         }
 
@@ -79,23 +84,40 @@ namespace A04AsymmetricFileEncrypter
             OpenFileDialog dialog = new OpenFileDialog();
             if (dialog.ShowDialog() == DialogResult.OK)
             {
-                //TODO: filename zwischenspeichern! dann kann man das weiter exportieren
-                cipherTextTb.Text = File.ReadAllText(dialog.FileName);
+                ShowText(dialog.FileName, cipherTextTb);
             }
         }
 
         private void EncryptBtn_Click(object sender, EventArgs e)
         {
             //TODO: statt den Text aus der Textbox holen, lieber wieder die Datei auslesen
-            byte[] content = Encoding.UTF8.GetBytes(plainTextTb.Text);
-            cipherTextTb.Text = RsaManager.Encrypt(content);
+            string file = File.ReadAllText(SelectedFile).Trim();
+            byte[] content = Encoding.UTF8.GetBytes(file);
+            byte[] encrypted = RsaManager.Encrypt(content);
+
+            cipherTextTb.Text = Encoding.UTF8.GetString(encrypted);
         }
 
         private void DecryptBtn_Click(object sender, EventArgs e)
         {
-            //TODO: statt den Text aus der Textbox holen, lieber wieder die Datei auslesen
-            byte[] content = Encoding.UTF8.GetBytes(plainTextTb.Text);
-            plainTextTb.Text = RsaManager.Decrypt(content);
+            string file = File.ReadAllText(SelectedFile).Trim();
+            byte[] content = Encoding.UTF8.GetBytes(file);
+            byte[] decrypted = RsaManager.Decrypt(content);
+
+            plainTextTb.Text = Encoding.UTF8.GetString(decrypted);
+        }
+
+        private void ShowText(string fileName, TextBox textBox)
+        {
+            textBox.Text = File.ReadAllText(fileName);
+            SelectedFile = fileName;
+        }
+
+        private void Reset()
+        {
+            SelectedFile = null;
+            plainTextTb.Text = "";
+            cipherTextTb.Text = "";
         }
     }
 }
